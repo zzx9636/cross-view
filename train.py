@@ -229,7 +229,7 @@ class Trainer:
             # if ((batch_idx + 1) % accumulation_steps) == 0:
             self.model_optimizer.step()
             #     self.model_optimizer.zero_grad()
-
+            print(losses)
             for loss_name in losses:
                 loss[loss_name] += losses[loss_name].item()
         # self.scheduler.step()
@@ -294,6 +294,7 @@ class Trainer:
                 self.opt.load_weights_folder))
 
         for key in self.models.keys():
+            print(key)
             if "discriminator" not in key:
                 print("Loading {} weights...".format(key))
                 path = os.path.join(
@@ -303,10 +304,11 @@ class Trainer:
                 pretrained_dict = torch.load(path)
                 if 'epoch' in pretrained_dict:
                     self.start_epoch = pretrained_dict['epoch']
+                    
                 pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
                 model_dict.update(pretrained_dict)
                 self.models[key].load_state_dict(model_dict)
-
+            
         # loading adam state
         if self.opt.load_weights_folder == "":
             optimizer_load_path = os.path.join(
@@ -329,6 +331,7 @@ class Trainer:
         optimizer.param_groups[1]['lr'] = lr
         optimizer.param_groups[0]['weight_decay'] = decay
         optimizer.param_groups[1]['weight_decay'] = decay
+        print("lr: ", lr_transform," ", lr, " ",decay)
         # for param_group in optimizer.param_groups:
         #     param_group['lr'] = lr
         #     param_group['lr'] = lr_transform

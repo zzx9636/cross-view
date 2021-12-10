@@ -31,7 +31,6 @@ def mean_precision(eval_segm, gt_segm):
             mAP[i] = 0.
         else:
             mAP[i] = val
-    # print(mAP)
     return mAP
 
 

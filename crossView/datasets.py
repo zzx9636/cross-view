@@ -48,6 +48,11 @@ def process_discr(topview, size):
     topview_n[topview == 0, 0] = 1.
     return topview_n
 
+def combine_gt(topview_map, topview_vehcile):
+    topview_combine = np.zeros_like(topview_map)
+    topview_combine[topview_map==1] = 1
+    topview_combine[topview_vehcile==1] = 2
+    return topview_combine
 
 class MonoDataset(data.Dataset):
     def __init__(self, opt, filenames, is_train=True):
@@ -80,7 +85,6 @@ class MonoDataset(data.Dataset):
             (self.height, self.width), interpolation=self.interp)
 
     def preprocess(self, inputs, color_aug):
-
         inputs["color"] = color_aug(self.resize(inputs["color"]))
         for key in inputs.keys():
             if key != "color" and "discr" not in key and key != "filename":
@@ -88,6 +92,7 @@ class MonoDataset(data.Dataset):
                     inputs[key], self.opt.occ_map_size)
             elif key != "filename":
                 inputs[key] = self.to_tensor(inputs[key])
+        inputs['combine'] = combine_gt(inputs["static"], inputs['dynamic'])
 
     def __len__(self):
         return len(self.filenames)
@@ -126,7 +131,6 @@ class MonoDataset(data.Dataset):
     def get_dynamic_gt(self, path, do_flip):
         tv = self.loader(path)
         return tv.convert('L')
-
 
 class KITTIObject(MonoDataset):
     """KITTI dataset which loads the original velodyne depth maps for ground truth
@@ -363,10 +367,9 @@ class Argoverse(MonoDataset):
                     self.get_static_gt_path(folder, frame_index), do_flip)
 
         if do_color_aug:
-            color_aug = transforms.ColorJitter.get_params(
+            color_aug = transforms.ColorJitter(
                 self.brightness, self.contrast, self.saturation, self.hue)
         else:
             color_aug = (lambda x: x)
-
         self.preprocess(inputs, color_aug)
         return inputs
