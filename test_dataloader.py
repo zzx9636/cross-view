@@ -55,10 +55,8 @@ class test:
             drop_last=True)
         
         for inputs in self.train_loader:
-            for key, input in inputs.items():
-                if key != "filename":
-                    print(key, input.shape)
             break
+        a = inputs['filename'][0]
 
         
 
