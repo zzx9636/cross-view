@@ -99,7 +99,7 @@ class Trainer_argo:
             #self.save_model()
 
     def run_epoch(self):
-        for inputs in tqdm.tqdm(self.train_loader):
+        for inputs in self.train_loader:
             self.model.train()
             self.optimizer.zero_grad()
             for key, input in inputs.items():
@@ -117,7 +117,7 @@ class Trainer_argo:
         iou, mAP = np.array([0., 0., 0.]), np.array([0., 0., 0.])
         #trans_iou, trans_mAP = np.array([0., 0.]), np.array([0., 0.])
         with torch.no_grad():
-            for inputs in tqdm.tqdm(self.val_loader):
+            for inputs in self.val_loader:
                 
                 self.model.eval()
                 for key, input in inputs.items():
