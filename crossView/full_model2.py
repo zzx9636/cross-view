@@ -8,7 +8,7 @@ import torch.nn as nn
 
 class PVA_model2(nn.Module):
     def __init__(self, opt, device):
-        super(PVA_model, self).__init__()
+        super(PVA_model2, self).__init__()
         self.opt = opt
         self.models = {}
         self.parameters_to_train = []

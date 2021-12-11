@@ -38,21 +38,21 @@ class CrossViewTransformer(nn.Module):
 
     def forward(self, front_x, cross_x, front_x_hat):
         m_batchsize, C, width, height = front_x.size()
-        proj_query = self.query_conv(front_x).view(m_batchsize, -1, width * height)  # B x C x (N)
+        proj_query = self.query_conv(cross_x).view(m_batchsize, -1, width * height)  # B x C x (N)
         proj_key = self.key_conv(front_x_hat).view(m_batchsize, -1, width * height).permute(0, 2, 1)  # B x C x (W*H)
 
         energy = torch.bmm(proj_key, proj_query)  # transpose check
         front_star, front_star_arg = torch.max(energy, dim=1)
-        proj_value = self.value_conv(cross_x).view(m_batchsize, -1, width * height)  # B x C x N
+        proj_value = self.value_conv(front_x).view(m_batchsize, -1, width * height)  # B x C x N
 
         T = feature_selection(proj_value, 2, front_star_arg).view(front_star.size(0), -1, width, height)
 
         S = front_star.view(front_star.size(0), 1, width, height)
 
-        front_res = torch.cat((front_x, T), dim=1)
+        front_res = torch.cat((cross_x, T), dim=1)
         front_res = self.f_conv(front_res)
         front_res = front_res * S
-        output = front_x + front_res
+        output = cross_x + front_res
 
         return output
 
