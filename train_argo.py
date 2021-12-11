@@ -91,7 +91,7 @@ class Trainer_argo:
                 len(val_dataset)))
 
     def train(self):
-        self.validation()
+        #self.validation()
         for self.epoch in range(self.start_epoch, self.opt.num_epochs + 1):
             self.adjust_learning_rate(self.optimizer, self.epoch, self.opt.lr_steps)
             self.run_epoch()
@@ -137,8 +137,8 @@ class Trainer_argo:
         mAP /= len(self.val_loader)
         print("Epoch: %d | Validation: mIOU: %.4f, %.4f mAP: %.4f, %.4f" % (self.epoch, iou[1], iou[2], mAP[1], mAP[2]))
         
-        log_dict = {"eval/step": self.epoch, "eval/map/mIOU": iou[1], "eval/map/mIOU": mAP[1],
-                    "eval/vehicle/mIOU": iou[2], "eval/vehicle/mIOU": mAP[2]}
+        log_dict = {"eval/step": self.epoch, "eval/map/mIOU": iou[1], "eval/map/mAP": mAP[1],
+                    "eval/vehicle/mIOU": iou[2], "eval/vehicle/mAP": mAP[2]}
         wandb.log(log_dict)
         
 
