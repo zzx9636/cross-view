@@ -5,10 +5,10 @@
 #SBATCH --cpus-per-task=16       # number of processes
 #SBATCH --mem=100G         # memory per cpu-core (4G per cpu-core is default)
 #SBATCH --gres=gpu:1             # number of gpus per node
-#SBATCH --time=4:00:00          # total run time limit (HH:MM:SS)
+#SBATCH --time=8:00:00          # total run time limit (HH:MM:SS)
 #SBATCH -p gpu-ee
-#SBATCH --output=/home/zixuz/slurm_output/train_cross.out
-#SBATCH --error=/home/zixuz/slurm_output/train_cross.err  # STDERR file
+#SBATCH --output=/home/zixuz/slurm_output/train_cross.%A_%a.out
+#SBATCH --error=/home/zixuz/slurm_output/train_cross.%A_%a.err  # STDERR file
 
 
 . /etc/profile

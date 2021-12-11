@@ -8,6 +8,8 @@ from torch.utils.data import DataLoader
 from crossView import PVA_model, Argoverse
 from opt import get_args
 import tqdm
+from datetime import datetime
+
 
 from utils import mean_IU, mean_precision
 import wandb
@@ -79,10 +81,12 @@ class Trainer_argo:
             self.load_model()
             
         # Save log and models path
-        #self.opt.save_path = os.path.join(self.opt.save_path, self.opt.split)
+        now = datetime.now()
+
+        self.opt.save_path = os.path.join(self.opt.save_path, now.strftime("%Y%m%d-%H%M%S"))
         wandb.init(project="cross-view", entity="zzx9636", config={"epochs": self.opt.num_epochs, 
                     "batch_size": self.opt.batch_size})
-        #wandb.watch(self.model, log_freq=100)
+
         wandb.define_metric("eval/*", step_metric="eval/step")
 
         print(
@@ -96,7 +100,8 @@ class Trainer_argo:
             self.adjust_learning_rate(self.optimizer, self.epoch, self.opt.lr_steps)
             self.run_epoch()
             self.validation()
-            #self.save_model()
+            if (self.epoch%5)==0:
+                self.save_model()
 
     def run_epoch(self):
         for inputs in self.train_loader:
@@ -145,15 +150,13 @@ class Trainer_argo:
     def save_model(self):
         save_path = os.path.join(
             self.opt.save_path,
-            self.opt.model_name,
             "weights_{}".format(
                 self.epoch)
         )
-
         if not os.path.exists(save_path):
             os.makedirs(save_path)
 
-        for model_name, model in self.models.items():
+        for model_name, model in self.model.models.items():
             model_path = os.path.join(save_path, "{}.pth".format(model_name))
             state_dict = model.state_dict()
             state_dict['epoch'] = self.epoch
@@ -164,6 +167,7 @@ class Trainer_argo:
             torch.save(state_dict, model_path)
         optim_path = os.path.join(save_path, "{}.pth".format("adam"))
         torch.save(self.optimizer.state_dict(), optim_path)
+        print("Save models to ", save_path)
 
     def load_model(self):
         """Load model(s) from disk
