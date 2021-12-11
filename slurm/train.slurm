@@ -5,7 +5,7 @@
 #SBATCH --cpus-per-task=4       # number of processes
 #SBATCH --mem-per-cpu=16G         # memory per cpu-core (4G per cpu-core is default)
 #SBATCH --gres=gpu:1             # number of gpus per node
-#SBATCH --time=4:00:00          # total run time limit (HH:MM:SS)
+#SBATCH --time=6:00:00          # total run time limit (HH:MM:SS)
 #SBATCH -p gpu-ee
 #SBATCH --output=/home/zixuz/slurm_output/train.out
 #SBATCH --error=/home/zixuz/slurm_output/train.err  # STDERR file
@@ -17,4 +17,4 @@ module purge
 module load anaconda3/2021.5
 conda activate crossview
 wandb offline
-python3 train_argo.py --batch_size 16
+python3 train_argo.py --batch_size 16 --num_workers 4
