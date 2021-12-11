@@ -16,4 +16,4 @@ module purge
 module load anaconda3/2021.5
 conda activate crossview
 wandb offline
-python3 train_argo.py --batch_size 16 --num_workers 16 --record
+python3 train_argo.py --batch_size 16 --num_workers 16 --record --num_epochs 300
