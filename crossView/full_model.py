@@ -1,5 +1,5 @@
 import time
-from .CrossViewTransformer import CrossViewTransformer
+from .CrossViewTransformer2 import CrossViewTransformer
 from .CycledViewProjection import CycledViewProjection
 from .model import Encoder, Decoder
 from .combine_loss import combine_loss
@@ -20,16 +20,13 @@ class PVA_model(nn.Module):
         self.criterion = combine_loss()
         self.device = device
         # Initializing models
-        self.models["encoder"] = Encoder(18, self.opt.height, self.opt.width, True)
+        self.models["encoder"] = Encoder(True, True)
 
-        self.models['CycledViewProjection'] = CycledViewProjection(in_dim=8)
-        self.models["CrossViewTransformer"] = CrossViewTransformer(128)
+        self.models['CycledViewProjection'] = CycledViewProjection(in_dim=16)
+        self.models["CrossViewTransformer"] = CrossViewTransformer(256)
 
-        self.models["decoder"] = Decoder(
-            self.models["encoder"].resnet_encoder.num_ch_enc, 3)
-        self.models["transform_decoder"] = Decoder(
-            self.models["encoder"].resnet_encoder.num_ch_enc, 3, "transform_decoder")
-
+        self.models["decoder"] = Decoder(3)
+        
         for key in self.models.keys():
             self.models[key].to(self.device)
             if "discr" in key:
@@ -54,9 +51,7 @@ class PVA_model(nn.Module):
         x_feature = features
         transform_feature, retransform_features = self.models["CycledViewProjection"](features)
         features = self.models["CrossViewTransformer"](features, transform_feature, retransform_features)
-
         outputs["topview"] = self.models["decoder"](features)
-        outputs["transform_topview"] = self.models["transform_decoder"](transform_feature)
 
         losses = self.criterion(inputs['combine'], outputs, x_feature, retransform_features)
 

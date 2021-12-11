@@ -84,10 +84,11 @@ class Trainer_argo:
         now = datetime.now()
 
         self.opt.save_path = os.path.join(self.opt.save_path, now.strftime("%Y%m%d-%H%M%S"))
-        wandb.init(project="cross-view", entity="zzx9636", config={"epochs": self.opt.num_epochs, 
-                    "batch_size": self.opt.batch_size})
+        if self.opt.record:
+            wandb.init(project="cross-view", entity="zzx9636", config={"epochs": self.opt.num_epochs, 
+                        "batch_size": self.opt.batch_size})
 
-        wandb.define_metric("eval/*", step_metric="eval/step")
+            wandb.define_metric("eval/*", step_metric="eval/step")
 
         print(
             "There are {:d} training items and {:d} validation items\n".format(
@@ -113,10 +114,10 @@ class Trainer_argo:
             _, losses = self.model(inputs)
             losses["loss"].backward()
             self.optimizer.step()
-            
-            wandb.log({"loss": losses["loss"], "topview_loss": losses["topview_loss"], 
-                       "transform_loss": losses["transform_loss"]}) 
-                       #"transform_topview_loss": losses["transform_topview_loss"]})
+            if self.opt.record:
+                wandb.log({"loss": losses["loss"], "topview_loss": losses["topview_loss"], 
+                        "transform_loss": losses["transform_loss"]}) 
+                        #"transform_topview_loss": losses["transform_topview_loss"]})
 
     def validation(self):
         iou, mAP = np.array([0., 0., 0.]), np.array([0., 0., 0.])
@@ -142,10 +143,12 @@ class Trainer_argo:
         mAP /= len(self.val_loader)
         print("Epoch: %d | Validation: mIOU: %.4f, %.4f mAP: %.4f, %.4f" % (self.epoch, iou[1], iou[2], mAP[1], mAP[2]))
         
-        log_dict = {"eval/step": self.epoch, "eval/map/mIOU": iou[1], "eval/map/mAP": mAP[1],
-                    "eval/vehicle/mIOU": iou[2], "eval/vehicle/mAP": mAP[2]}
-        wandb.log(log_dict)
+        if self.opt.record:    
+            log_dict = {"eval/step": self.epoch, "eval/map/mIOU": iou[1], "eval/map/mAP": mAP[1],
+                        "eval/vehicle/mIOU": iou[2], "eval/vehicle/mAP": mAP[2]}
         
+            wandb.log(log_dict)
+            
 
     def save_model(self):
         save_path = os.path.join(
@@ -217,7 +220,8 @@ class Trainer_argo:
         optimizer.param_groups[1]['lr'] = lr
         optimizer.param_groups[0]['weight_decay'] = decay
         optimizer.param_groups[1]['weight_decay'] = decay
-        wandb.log({"lr": lr, "lr_transform":lr_transform, "decay": decay})
+        if self.opt.record:
+            wandb.log({"lr": lr, "lr_transform":lr_transform, "decay": decay})
 
 
     def set_seed(self):

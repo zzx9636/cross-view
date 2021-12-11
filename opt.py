@@ -77,6 +77,7 @@ def get_args():
                         help="OSM path")
     parser.add_argument('--log_root', type=str, default=os.getcwd() + '/log')
     parser.add_argument('--model_split_save', type=bool, default=True)
+    parser.add_argument('--record', type=bool, default=False)
 
     configs = edict(vars(parser.parse_args()))
 

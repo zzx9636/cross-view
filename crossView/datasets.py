@@ -132,173 +132,6 @@ class MonoDataset(data.Dataset):
         tv = self.loader(path)
         return tv.convert('L')
 
-class KITTIObject(MonoDataset):
-    """KITTI dataset which loads the original velodyne depth maps for ground truth
-    """
-
-    def __init__(self, *args, **kwargs):
-        super(KITTIObject, self).__init__(*args, **kwargs)
-        self.root_dir = "./data/object"
-
-    def get_image_path(self, root_dir, frame_index):
-        image_dir = os.path.join(root_dir, 'image_2')
-        img_path = os.path.join(image_dir, "%06d.png" % int(frame_index))
-        return img_path
-
-    def get_dynamic_path(self, root_dir, frame_index):
-        tv_dir = os.path.join(root_dir, 'vehicle_256')
-        tv_path = os.path.join(tv_dir, "%06d.png" % int(frame_index))
-        return tv_path
-
-    def get_dynamic_gt_path(self, root_dir, frame_index):
-        return self.get_dynamic_path(root_dir, frame_index)
-
-    def get_static_gt_path(self, root_dir, frame_index):
-        pass
-
-    def __getitem__(self, index):
-        inputs = {}
-
-        do_color_aug = self.is_train and random.random() > 0.5
-        do_flip = self.is_train and random.random() > 0.5
-
-        frame_index = self.filenames[index]  # .split()
-        # check this part from original code if the dataset is changed
-        folder = self.opt.data_path
-        inputs["filename"] = frame_index
-        inputs["color"] = self.get_color(self.get_image_path(folder, frame_index), do_flip)
-        if self.is_train:
-            inputs["dynamic"] = self.get_dynamic(
-                self.get_dynamic_path(folder, frame_index), do_flip)
-        else:
-            inputs["dynamic_gt"] = self.get_dynamic_gt(
-                self.get_dynamic_gt_path(folder, frame_index), do_flip)
-
-        if do_color_aug:
-            color_aug = transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
-        else:
-            color_aug = (lambda x: x)
-
-        self.preprocess(inputs, color_aug)
-        return inputs
-
-
-class KITTIOdometry(MonoDataset):
-    def __init__(self, *args, **kwargs):
-        super(KITTIOdometry, self).__init__(*args, **kwargs)
-        self.root_dir = "./data/odometry/sequences/"
-
-    def get_image_path(self, root_dir, frame_index):
-        file_name = frame_index.replace("road_dense128", "image_2")
-        img_path = os.path.join(root_dir, file_name)
-        return img_path
-
-    def get_static_path(self, root_dir, frame_index):
-        path = os.path.join(root_dir, frame_index)
-        print("static path:", path)
-        return path
-
-    def get_osm_path(self, root_dir):
-        osm_file = np.random.choice(os.listdir(root_dir))
-        osm_path = os.path.join(root_dir, osm_file)
-
-        return osm_path
-
-    def get_static_gt_path(self, root_dir, frame_index):
-        return self.get_static_path(root_dir, frame_index)
-
-    def get_dynamic_gt_path(self, root_dir, frame_index):
-        pass
-
-    def __getitem__(self, index):
-        inputs = {}
-
-        do_color_aug = self.is_train and random.random() > 0.5
-        do_flip = self.is_train and random.random() > 0.5
-
-        frame_index = self.filenames[index]  # .split()
-        # check this part from original code if the dataset is changed
-        folder = self.opt.data_path
-        inputs["filename"] = frame_index
-        inputs["color"] = self.get_color(self.get_image_path(folder, frame_index), do_flip)
-        if self.is_train:
-            inputs["static"] = self.get_static(
-                self.get_static_path(folder, frame_index), do_flip)
-        else:
-            inputs["static_gt"] = self.get_static_gt(
-                self.get_static_gt_path(folder, frame_index), do_flip)
-        # inputs["osm"] = self.get_osm(folder, frame_index, do_flip)
-
-        if do_color_aug:
-            color_aug = transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
-        else:
-            color_aug = (lambda x: x)
-
-        self.preprocess(inputs, color_aug)
-        return inputs
-
-
-class KITTIRAW(MonoDataset):
-    def __init__(self, *args, **kwargs):
-        super(KITTIRAW, self).__init__(*args, **kwargs)
-        self.root_dir = "./data/raw/"
-
-    def get_image_path(self, root_dir, frame_index):
-        img_path = os.path.join(root_dir, frame_index)
-        return img_path
-
-    def get_static_path(self, root_dir, frame_index):
-        path = os.path.join(
-            root_dir, frame_index.replace(
-                "image_02/data", "road_256"))
-        return path
-
-    def get_osm_path(self, root_dir):
-        osm_file = np.random.choice(os.listdir(root_dir))
-        osm_path = os.path.join(root_dir, osm_file)
-
-        return osm_path
-
-    def get_static_gt_path(self, root_dir, frame_index):
-        path = os.path.join(
-            root_dir, frame_index.replace(
-                "image_02/data", "road_256"))
-        return path
-
-    def get_dynamic_gt_path(self, root_dir, frame_index):
-        pass
-
-    def __getitem__(self, index):
-        inputs = {}
-
-        do_color_aug = self.is_train and random.random() > 0.5
-        do_flip = self.is_train and random.random() > 0.5
-
-        frame_index = self.filenames[index]  # .split()
-        # check this part from original code if the dataset is changed
-        folder = self.opt.data_path
-        inputs["filename"] = frame_index
-        inputs["color"] = self.get_color(self.get_image_path(folder, frame_index), do_flip)
-        if self.is_train:
-            inputs["static"] = self.get_static(
-                self.get_static_path(folder, frame_index), do_flip)
-        else:
-            inputs["static_gt"] = self.get_static_gt(
-                self.get_static_gt_path(folder, frame_index), do_flip)
-        # inputs["osm"] = self.get_osm(folder, frame_index, do_flip)
-
-        if do_color_aug:
-            color_aug = transforms.ColorJitter.get_params(
-                self.brightness, self.contrast, self.saturation, self.hue)
-        else:
-            color_aug = (lambda x: x)
-
-        self.preprocess(inputs, color_aug)
-        return inputs
-
-
 class Argoverse(MonoDataset):
     def __init__(self, *args, **kwargs):
         super(Argoverse, self).__init__(*args, **kwargs)
@@ -329,17 +162,6 @@ class Argoverse(MonoDataset):
         path = os.path.join(root_dir, file_name)
         return path
 
-    def get_static_gt_path(self, root_dir, frame_index):
-        path = os.path.join(
-            root_dir,
-            frame_index).replace(
-            "road_bev",
-            "road_gt")
-        return path
-
-    def get_dynamic_gt_path(self, root_dir, frame_index):
-        return self.get_dynamic_path(root_dir, frame_index)
-
     def __getitem__(self, index):
         inputs = {}
 
@@ -357,17 +179,7 @@ class Argoverse(MonoDataset):
             self.get_dynamic_path(folder, frame_index), do_flip)
         inputs["static"] = self.get_static(
             self.get_static_path(folder, frame_index), do_flip)
-        # if self.opt.type == "dynamic":
-        #     inputs["discr"] = process_discr(
-        #         inputs["dynamic"], self.opt.occ_map_size)
-        # else:
-        #     if self.opt.type == "dynamic":
-        #         inputs["dynamic_gt"] = self.get_dynamic_gt(
-        #             self.get_dynamic_gt_path(folder, frame_index), do_flip)
-        #     elif self.opt.type == "static":
-        #         inputs["static_gt"] = self.get_static_gt(
-        #             self.get_static_gt_path(folder, frame_index), do_flip)
-
+        
         if do_color_aug:
             color_aug = transforms.ColorJitter(
                 self.brightness, self.contrast, self.saturation, self.hue)

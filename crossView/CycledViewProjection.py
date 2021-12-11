@@ -6,6 +6,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 import numpy as np
+from torchinfo import summary
 
 
 class CycledViewProjection(nn.Module):
@@ -16,7 +17,8 @@ class CycledViewProjection(nn.Module):
         # self.bn = nn.BatchNorm2d(512)
 
     def forward(self, x):
-        B, C, H, W = x.view([-1, int(x.size()[1])] + list(x.size()[2:])).size()
+        #B, C, H, W = x.view([-1, int(x.size()[1])] + list(x.size()[2:])).size()
+        B = x.shape[0]
         # x = self.bn(x)
         transform_feature = self.transform_module(x)
         transform_features = transform_feature.view([B, int(x.size()[1])] + list(x.size()[2:]))
@@ -48,6 +50,7 @@ class TransformModule(nn.Module):
     def forward(self, x):
         # shape x: B, C, H, W
         # x = self.bn(x)
+        #print(x.shape, list(x.size()[:2]) + [self.dim * self.dim, ])
         x = x.view(list(x.size()[:2]) + [self.dim * self.dim, ])
         view_comb = self.fc_transform(x)
         view_comb = view_comb.view(list(view_comb.size()[:2]) + [self.dim, self.dim])
@@ -55,9 +58,12 @@ class TransformModule(nn.Module):
 
 
 if __name__ == '__main__':
-    features = torch.arange(0, 1048576)
-    features = torch.where(features < 20, features, torch.zeros_like(features))
-    # features = features.view([2, 3, 4]).float()
-    features = features.view([8, 128, 32, 32]).float()
-    CVP = CycledViewProjection(128)
-    print(CVP(features)[0].shape)
+    # features = torch.arange(0, 1048576)
+    # features = torch.where(features < 20, features, torch.zeros_like(features))
+    # # features = features.view([2, 3, 4]).float()
+    # features = features.view([8, 128, 32, 32]).float()
+    # CVP = CycledViewProjection(128)
+    # print(CVP(features)[0].shape)
+    
+    CVP = CycledViewProjection(32)
+    summary(CVP, [6,256,32,32])

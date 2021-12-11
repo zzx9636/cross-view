@@ -60,14 +60,11 @@ class combine_loss(nn.Module):
         #print(gt.shape, outputs["topview"].shape)
         losses["topview_loss"] = self.compute_topview_loss(
             outputs["topview"], gt)
-        losses["transform_topview_loss"] = self.compute_topview_loss(
-            outputs["transform_topview"],gt)
         losses["transform_loss"] = self.compute_transform_losses(
             retransform_features,
             features
             )
-        losses["loss"] = losses["topview_loss"] + 0.001 * losses["transform_loss"] + 1 * losses["transform_topview_loss"]
-
+        losses["loss"] = losses["topview_loss"] + 0.001 * losses["transform_loss"] 
         return losses
 
     def compute_topview_loss(self, outputs, true_top_view):

@@ -5,10 +5,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils import spectral_norm
+from torchinfo.torchinfo import forward_pass
 
-from .ResnetEncoder import ResnetEncoder
-import matplotlib.pyplot as PLT
-
+from .EfficientNetEncoder import EfficientNetEncoder
+from torchinfo import summary
 # Utils
 
 
@@ -26,6 +26,8 @@ class ConvBlock(nn.Module):
         out = self.conv(x)
         out = self.nonlin(out)
         return out
+    
+    
 
 
 class Conv3x3(nn.Module):
@@ -73,14 +75,18 @@ class Encoder(nn.Module):
         Processes input image tensors into output feature tensors
     """
 
-    def __init__(self, num_layers, img_ht, img_wt, pretrained=True):
+    def __init__(self,  pretrained=True, freeze = True):
         super(Encoder, self).__init__()
 
-        self.resnet_encoder = ResnetEncoder(num_layers, pretrained)
-        num_ch_enc = self.resnet_encoder.num_ch_enc
+        self.efficient_encoder = EfficientNetEncoder(pretrained)
+        if freeze:
+            for param in self.efficient_encoder.parameters():
+                param.requires_grad = False
+                
+        num_ch_enc = self.efficient_encoder.num_ch_enc
         # convolution to reduce depth and size of features before fc
-        self.conv1 = Conv3x3(num_ch_enc[-1], 128)
-        self.conv2 = Conv3x3(128, 128)
+        self.conv1 = Conv3x3(num_ch_enc[-1], 512)
+        self.conv2 = Conv3x3(512, 256)
         self.pool = nn.MaxPool2d(2)
 
     def forward(self, x):
@@ -99,14 +105,29 @@ class Encoder(nn.Module):
             | Shape: (batch_size, 128, img_height/128, img_width/128)
         """
 
-        batch_size, c, h, w = x.shape
-        x = self.resnet_encoder(x)[-1]
+        x = self.efficient_encoder(x)
         x = self.pool(self.conv1(x))
         x = self.conv2(x)
-        x = self.pool(x)
         return x
 
-
+class UpSample(nn.Module):
+    def __init__(self, c_in, c_out, upscale=True):
+        super(UpSample, self).__init__()
+        self.upscale = upscale
+        self.conv0 = nn.Conv2d(c_in, c_out, 3, 1, 1)
+        self.norm0 = nn.BatchNorm2d(c_out)
+        self.relu = nn.ReLU()
+        self.upsample = nn.ConvTranspose2d(c_out, c_out, 3, 2, 1, 1)
+        self.conv1 = nn.Conv2d(c_out, c_out, 3, 1, 1)
+        self.norm1 = nn.BatchNorm2d(c_out)
+        self.dropout = nn.Dropout3d(0.1)
+        
+    def forward(self, input):
+        x = self.relu(self.norm0(self.conv0(input)))
+        if self.upscale:
+            x = self.upsample(x)
+        return self.dropout(self.norm1(self.conv1(x)))
+        
 class Decoder(nn.Module):
     """ Encodes the Image into low-dimensional feature representation
 
@@ -121,66 +142,32 @@ class Decoder(nn.Module):
         Processes input image features into output occupancy maps/layouts
     """
 
-    def __init__(self, num_ch_enc, num_class=2, type=''):
+    def __init__(self,  num_class=3):
         super(Decoder, self).__init__()
         self.num_output_channels = num_class
-        self.num_ch_enc = num_ch_enc
-        self.num_ch_dec = np.array([16, 32, 64, 128, 256])
-        # self.num_ch_dec = np.array([64, 128, 256])
-        # decoder
-        self.convs = OrderedDict()
-        for i in range(4, -1, -1):
-            # upconv_0
-            if type == 'transform_decoder':
-                num_ch_in = 128 if i == 4 else self.num_ch_dec[i + 1]
-            else:
-                num_ch_in = 128 if i == 4 else self.num_ch_dec[i + 1]
-            num_ch_out = self.num_ch_dec[i]
-            self.convs[("upconv", i, 0)] = nn.Conv2d(
-                num_ch_in, num_ch_out, 3, 1, 1)
-            self.convs[("norm", i, 0)] = nn.BatchNorm2d(num_ch_out)
-            self.convs[("relu", i, 0)] = nn.ReLU(True)
+        
+        
+        self.block0 = UpSample(256, 256, True) # 32
+        self.block1 = UpSample(256, 128, True) # 64
+        self.block2 = UpSample(128, 64, True) # 128
+        self.block3 = UpSample(64, 32, True) # 256
+        self.block4 = UpSample(32, 16, False) # 64
 
-            # upconv_1
-            self.convs[("upconv", i, 1)] = nn.Conv2d(
-                num_ch_out, num_ch_out, 3, 1, 1)
-            self.convs[("norm", i, 1)] = nn.BatchNorm2d(num_ch_out)
+        self.conv_topview = Conv3x3(
+            16, self.num_output_channels)
+        
 
-        self.convs["topview"] = Conv3x3(
-            self.num_ch_dec[0], self.num_output_channels)
-        self.dropout = nn.Dropout3d(0.2)
-        self.decoder = nn.ModuleList(list(self.convs.values()))
+    def forward(self, x):
 
-    def forward(self, x, is_training=True):
-        """
-
-        Parameters
-        ----------
-        x : torch.FloatTensor
-            Batch of encoded feature tensors
-            | Shape: (batch_size, 128, occ_map_size/2^5, occ_map_size/2^5)
-        is_training : bool
-            whether its training or testing phase
-
-        Returns
-        -------
-        x : torch.FloatTensor
-            Batch of output Layouts
-            | Shape: (batch_size, 2, occ_map_size, occ_map_size)
-        """
-        h_x = 0
-        for i in range(4, -1, -1):
-            x = self.convs[("upconv", i, 0)](x)
-            x = self.convs[("norm", i, 0)](x)
-            x = self.convs[("relu", i, 0)](x)
-            x = upsample(x)
-            x = self.convs[("upconv", i, 1)](x)
-            x = self.convs[("norm", i, 1)](x)
-
-        if is_training:
-            x = self.convs["topview"](x)
-        else:
-            softmax = nn.Softmax2d()
-            x = softmax(self.convs["topview"](x))
-
+        x = self.block0(x)
+        x = self.block1(x)        
+        x = self.block2(x)
+        x = self.block3(x)
+        x = self.block4(x)
+        x = self.conv_topview(x)
+        
         return x
+
+if __name__ == '__main__':
+    model = Decoder(3)
+    summary(model, [4,128,32, 32])
