@@ -6,7 +6,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from crossView import PVA_model, Argoverse
 from opt import get_args
-import tqdm
+from tqdm import tqdm
 from datetime import datetime
 
 from utils import mean_IU, mean_precision, extract_masks
@@ -26,15 +26,9 @@ def readlines(filename):
 class eval_argo:
     def __init__(self):
         self.opt = get_args()
-        self.models = {}
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         self.create_time = time.strftime("%Y-%m-%d-%H-%M", time.localtime())
-        self.epoch = 0
-        self.start_epoch = 0
-                 
-        if self.seed != 0:
-            self.set_seed()  # set seed
 
         # Initializing models
         self.model = PVA_model(self.opt, self.device)
@@ -104,13 +98,13 @@ class eval_argo:
                 pred = np.squeeze(torch.argmax(outputs_scale, 1).numpy())
                 true = np.squeeze(inputs["combine"].detach().cpu().numpy())
 
-                self.save_topview(inputs['filename'], true, pred)
+                self.save_topview(inputs['filename'][0], true, pred)
                 
                 iou += mean_IU(pred, true)
                 mAP += mean_precision(pred, true)
         iou /= len(self.val_loader)
         mAP /= len(self.val_loader)
-        print("Epoch: %d | Validation: mIOU Map: %.4f, mIOU Vehicle:%.4f; mAP Map: %.4f, mAP Map: %.4f" % (self.epoch, iou[1], iou[2], mAP[1], mAP[2]))
+        print(" Validation: mIOU Map: %.4f, mIOU Vehicle:%.4f; mAP Map: %.4f, mAP Map: %.4f" % (iou[1], iou[2], mAP[1], mAP[2]))
     
     def generate_img(self, segm):
         h,w = segm.shape
@@ -121,7 +115,7 @@ class eval_argo:
         output[segm==1] = [1,1,1]   
         # 2 is car
         output[segm==2] = [0,0,1]
-        return output
+        return Image.fromarray(np.uint8(output*255))
         
     
     def save_topview(self, filename, gt, pred):
@@ -162,8 +156,6 @@ class eval_argo:
                     "{}.pth".format(key))
                 model_dict = self.model.models[key].state_dict()
                 pretrained_dict = torch.load(path)
-                if 'epoch' in pretrained_dict:
-                    self.start_epoch = pretrained_dict['epoch']
                 pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
                 model_dict.update(pretrained_dict)
                 self.model.models[key].load_state_dict(model_dict)
