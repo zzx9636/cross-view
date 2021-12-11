@@ -196,6 +196,7 @@ class KITTIOdometry(MonoDataset):
 
     def get_static_path(self, root_dir, frame_index):
         path = os.path.join(root_dir, frame_index)
+        print("static path:", path)
         return path
 
     def get_osm_path(self, root_dir):
@@ -301,7 +302,7 @@ class KITTIRAW(MonoDataset):
 class Argoverse(MonoDataset):
     def __init__(self, *args, **kwargs):
         super(Argoverse, self).__init__(*args, **kwargs)
-        self.root_dir = "./data/argo"
+        self.root_dir = "./datasets/argoverse"
 
     def get_image_path(self, root_dir, frame_index):
         file_name = frame_index.replace(
@@ -312,6 +313,7 @@ class Argoverse(MonoDataset):
 
     def get_static_path(self, root_dir, frame_index):
         path = os.path.join(root_dir, frame_index)
+        #print("static_path", path)
         return path
 
     def get_osm_path(self, root_dir):
@@ -350,21 +352,21 @@ class Argoverse(MonoDataset):
         inputs["filename"] = frame_index
         inputs["color"] = self.get_color(self.get_image_path(folder, frame_index), do_flip)
 
-        if self.is_train:
-            inputs["dynamic"] = self.get_dynamic(
-                self.get_dynamic_path(folder, frame_index), do_flip)
-            inputs["static"] = self.get_static(
-                self.get_static_path(folder, frame_index), do_flip)
-            if self.opt.type == "dynamic":
-                inputs["discr"] = process_discr(
-                    inputs["dynamic"], self.opt.occ_map_size)
-        else:
-            if self.opt.type == "dynamic":
-                inputs["dynamic_gt"] = self.get_dynamic_gt(
-                    self.get_dynamic_gt_path(folder, frame_index), do_flip)
-            elif self.opt.type == "static":
-                inputs["static_gt"] = self.get_static_gt(
-                    self.get_static_gt_path(folder, frame_index), do_flip)
+        # if self.is_train:
+        inputs["dynamic"] = self.get_dynamic(
+            self.get_dynamic_path(folder, frame_index), do_flip)
+        inputs["static"] = self.get_static(
+            self.get_static_path(folder, frame_index), do_flip)
+        # if self.opt.type == "dynamic":
+        #     inputs["discr"] = process_discr(
+        #         inputs["dynamic"], self.opt.occ_map_size)
+        # else:
+        #     if self.opt.type == "dynamic":
+        #         inputs["dynamic_gt"] = self.get_dynamic_gt(
+        #             self.get_dynamic_gt_path(folder, frame_index), do_flip)
+        #     elif self.opt.type == "static":
+        #         inputs["static_gt"] = self.get_static_gt(
+        #             self.get_static_gt_path(folder, frame_index), do_flip)
 
         if do_color_aug:
             color_aug = transforms.ColorJitter(
@@ -373,3 +375,4 @@ class Argoverse(MonoDataset):
             color_aug = (lambda x: x)
         self.preprocess(inputs, color_aug)
         return inputs
+

@@ -79,10 +79,10 @@ class Trainer_argo:
             self.load_model()
             
         # Save log and models path
-        self.opt.save_path = os.path.join(self.opt.save_path, self.opt.split)
+        #self.opt.save_path = os.path.join(self.opt.save_path, self.opt.split)
         wandb.init(project="cross-view", entity="zzx9636", config={"epochs": self.opt.num_epochs, 
                     "batch_size": self.opt.batch_size})
-        wandb.watch(self.model, log_freq=100)
+        #wandb.watch(self.model, log_freq=100)
         wandb.define_metric("eval/*", step_metric="eval/step")
 
         print(
@@ -91,10 +91,11 @@ class Trainer_argo:
                 len(val_dataset)))
 
     def train(self):
+        self.validation()
         for self.epoch in range(self.start_epoch, self.opt.num_epochs + 1):
             self.adjust_learning_rate(self.optimizer, self.epoch, self.opt.lr_steps)
             self.run_epoch()
-            #self.validation()
+            self.validation()
             #self.save_model()
 
     def run_epoch(self):
@@ -113,20 +114,25 @@ class Trainer_argo:
                        #"transform_topview_loss": losses["transform_topview_loss"]})
 
     def validation(self):
-        iou, mAP = np.array([0., 0.]), np.array([0., 0.])
+        iou, mAP = np.array([0., 0., 0.]), np.array([0., 0., 0.])
         #trans_iou, trans_mAP = np.array([0., 0.]), np.array([0., 0.])
-        for inputs in tqdm.tqdm(self.val_loader):
-            with torch.no_grad():
+        with torch.no_grad():
+            for inputs in tqdm.tqdm(self.val_loader):
+                
                 self.model.eval()
-                outputs,_ = self.process_batch(inputs)
-            pred = np.squeeze(
-                torch.argmax(
-                    outputs["topview"].detach(),
-                    1).cpu().numpy())
-            true = np.squeeze(
-                inputs["combine"].detach().cpu().numpy())
-            iou += mean_IU(pred, true)
-            mAP += mean_precision(pred, true)
+                for key, input in inputs.items():
+                    if key != "filename":
+                        inputs[key] = input.to(self.device)
+                outputs, _ = self.model(inputs)
+                pred = np.squeeze(
+                    torch.argmax(
+                        outputs["topview"].detach(),
+                        1).cpu().numpy())
+                true = np.squeeze(
+                    inputs["combine"].detach().cpu().numpy())
+                #print(mean_IU(pred, true), mean_precision(pred, true))
+                iou += mean_IU(pred, true)
+                mAP += mean_precision(pred, true)
         iou /= len(self.val_loader)
         mAP /= len(self.val_loader)
         print("Epoch: %d | Validation: mIOU: %.4f, %.4f mAP: %.4f, %.4f" % (self.epoch, iou[1], iou[2], mAP[1], mAP[2]))

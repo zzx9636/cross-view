@@ -6,7 +6,7 @@ from easydict import EasyDict as edict
 
 def get_args():
     parser = argparse.ArgumentParser(description="Training options")
-    parser.add_argument("--data_path", type=str, default="./data",
+    parser.add_argument("--data_path", type=str, default="./datasets/argoverse",
                         choices=[
                             './datasets/argoverse',
                             './datasets/kitti/object/training',
@@ -65,7 +65,7 @@ def get_args():
                         help="dynamic weight for calculating loss")
     parser.add_argument("--occ_map_size", type=int, default=256,
                         help="size of topview occupancy map")
-    parser.add_argument("--num_class", type=int, default=2,
+    parser.add_argument("--num_class", type=int, default=3,
                         help="Number of classes")
     parser.add_argument("--num_epochs", type=int, default=120,
                         help="Max number of training epochs")

@@ -1,11 +1,11 @@
 import math
 
-import cv2
+#import cv2
 import numpy as np
 import torch
-import torch.nn.functional as F
-from torch.autograd import Variable
-import matplotlib.pyplot as PLT
+#import torch.nn.functional as F
+#from torch.autograd import Variable
+#import matplotlib.pyplot as PLT
 
 
 def to_cpu(tensor):
@@ -18,7 +18,9 @@ def _sigmoid(x):
 
 def mean_precision(eval_segm, gt_segm):
     check_size(eval_segm, gt_segm)
-    cl, n_cl = extract_classes(gt_segm)
+    #cl, n_cl = extract_classes(gt_segm)
+    cl = np.array([0,1,2])
+    n_cl = 3
     eval_mask, gt_mask = extract_both_masks(eval_segm, gt_segm, cl, n_cl)
     mAP = [0] * n_cl
     for i, c in enumerate(cl):
@@ -41,8 +43,10 @@ def mean_IU(eval_segm, gt_segm):
 
     check_size(eval_segm, gt_segm)
 
-    cl, n_cl = union_classes(eval_segm, gt_segm)
-    _, n_cl_gt = extract_classes(gt_segm)
+    #cl, n_cl = union_classes(eval_segm, gt_segm)
+    cl = np.array([0,1,2])
+    n_cl = 3
+    #_, n_cl_gt = extract_classes(gt_segm)
     eval_mask, gt_mask = extract_both_masks(eval_segm, gt_segm, cl, n_cl)
 
     IU = list([0]) * n_cl

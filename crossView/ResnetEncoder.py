@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.utils.model_zoo as model_zoo
 
 import torchvision.models as models
-import matplotlib.pyplot as PLT
+#import matplotlib.pyplot as PLT
 
 
 class ResNetMultiImageInput(models.ResNet):

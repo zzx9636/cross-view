@@ -57,7 +57,7 @@ class combine_loss(nn.Module):
 
     def forward(self, gt, outputs, features, retransform_features):
         losses = {}
-
+        #print(gt.shape, outputs["topview"].shape)
         losses["topview_loss"] = self.compute_topview_loss(
             outputs["topview"], gt)
         losses["transform_topview_loss"] = self.compute_topview_loss(
@@ -72,7 +72,8 @@ class combine_loss(nn.Module):
 
     def compute_topview_loss(self, outputs, true_top_view):
         generated_top_view = outputs
-        true_top_view = torch.squeeze(true_top_view.long())
+        #true_top_view = torch.squeeze(true_top_view.long())
+        true_top_view = true_top_view.long()
         output = self.cross_entropy(generated_top_view, true_top_view)
 
         return output
