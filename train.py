@@ -129,7 +129,7 @@ class Trainer:
                 len(val_dataset)))
 
     def train(self):
-        #self.validation()
+        self.validation()
         for self.epoch in range(self.start_epoch, self.opt.num_epochs + 1):
             self.run_epoch()
             self.validation()

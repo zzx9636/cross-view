@@ -21,7 +21,6 @@ class PVA_transformer(nn.Module):
         
         
     def forward(self, inputs):
-        outputs = {}
         
         x_front, x_top, x_hat_front = self.encoder(inputs["color"])
 
@@ -41,5 +40,5 @@ class PVA_transformer(nn.Module):
         
         losses = self.loss_func(inputs['combine'], output, x_front, x_hat_front)
 
-        return outputs, losses
+        return output, losses
     
