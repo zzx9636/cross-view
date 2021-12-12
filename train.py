@@ -42,6 +42,9 @@ class NoamOpt:
         return self.factor * \
             (self.model_size ** (-0.5) *
             min(step ** (-0.5), step * self.warmup ** (-1.5)))
+    
+    def state_dict(self):
+        return self.optimizer.state_dict()
 
 def readlines(filename):
     """Read all the lines in a text file and return as a list
@@ -129,7 +132,7 @@ class Trainer:
                 len(val_dataset)))
 
     def train(self):
-        self.validation()
+        #self.validation()
         for self.epoch in range(self.start_epoch, self.opt.num_epochs + 1):
             self.run_epoch()
             self.validation()
