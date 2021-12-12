@@ -60,8 +60,11 @@ class Encoder(nn.Module):
         
         b,n,h,w = x.shape
         
-        x_front = self.positional_encoder(x).view(b,n,h*w)
+        embed = self.positional_encoder(x)
         x_top, x_hat_front = self.projection(x)
-        x_top = self.positional_encoder(x_top).view(b,n,h*w)
-        x_hat_front = self.positional_encoder(x_hat_front).view(b,n,h*w)
+        
+        x_front = (x + embed).view(b,n,h*w)
+        x_top = (x_top+embed).view(b,n,h*w)
+        x_hat_front = (x_hat_front+embed).view(b,n,h*w)
+        
         return x_front, x_top, x_hat_front
