@@ -41,7 +41,10 @@ class Trainer_argo:
 
         # Initializing models
         self.model = PVA_model(self.opt, self.device)
-        #self.model.to(self.device)
+        if torch.cuda.device_count() > 1:
+            print("Use ", torch.cuda.device_count(), "GPUs!")
+            self.model = torch.nn.DataParallel(self.model)
+        self.model.to_device(self.device)
 
         # Optimization
         self.optimizer = optim.Adam(self.model.parameters_to_train)

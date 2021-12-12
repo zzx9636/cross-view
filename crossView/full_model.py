@@ -7,7 +7,7 @@ from .combine_loss import combine_loss
 import torch.nn as nn
 
 class PVA_model(nn.Module):
-    def __init__(self, opt, device):
+    def __init__(self, opt):
         super(PVA_model, self).__init__()
         self.opt = opt
         self.models = {}
@@ -18,7 +18,7 @@ class PVA_model(nn.Module):
         self.parameters_to_train = []
         self.parameters_to_train_D = []
         self.criterion = combine_loss()
-        self.device = device
+        #self.device = device
         # Initializing models
         self.models["encoder"] = Encoder(True, True)
 
@@ -28,7 +28,7 @@ class PVA_model(nn.Module):
         self.models["decoder"] = Decoder(3)
         
         for key in self.models.keys():
-            self.models[key].to(self.device)
+            #self.models[key].to(self.device)
             if "discr" in key:
                 self.parameters_to_train_D += list(
                     self.models[key].parameters())
@@ -40,7 +40,10 @@ class PVA_model(nn.Module):
             {"params": self.transform_parameters_to_train, "lr": self.opt.lr_transform},
             {"params": self.base_parameters_to_train, "lr": self.opt.lr},
         ]
-        self.criterion.to(self.device)
+    def to_device(self, device):
+        self.criterion.to(device)
+        for key in self.models.keys():
+            self.models[key].to(device)
     
       
     def forward(self, inputs):

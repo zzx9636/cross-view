@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.nn.utils import spectral_norm
 from torchinfo.torchinfo import forward_pass
 
-from .EfficientNetEncoder import EfficientNetEncoder
+from EfficientNetEncoder import EfficientNetEncoder
 from torchinfo import summary
 # Utils
 
@@ -117,16 +117,17 @@ class UpSample(nn.Module):
         self.conv0 = nn.Conv2d(c_in, c_out, 3, 1, 1)
         self.norm0 = nn.BatchNorm2d(c_out)
         self.relu = nn.ReLU()
-        self.upsample = nn.ConvTranspose2d(c_out, c_out, 3, 2, 1, 1)
-        self.conv1 = nn.Conv2d(c_out, c_out, 3, 1, 1)
-        self.norm1 = nn.BatchNorm2d(c_out)
-        self.dropout = nn.Dropout3d(0.1)
+        self.upsample = nn.ConvTranspose2d(c_in, c_out, 3, 2, 1, 1)
+        # self.conv1 = nn.Conv2d(c_out, c_out, 3, 1, 1)
+        # self.norm1 = nn.BatchNorm2d(c_out)
+        # self.dropout = nn.Dropout3d(0.1)
         
-    def forward(self, input):
-        x = self.relu(self.norm0(self.conv0(input)))
+    def forward(self, x):
         if self.upscale:
-            x = self.upsample(x)
-        return self.dropout(self.norm1(self.conv1(x)))
+            x = self.relu(self.norm0(self.upsample(x)))
+        else:
+            x = self.relu(self.norm0(self.conv0(x)))
+        return x
         
 class Decoder(nn.Module):
     """ Encodes the Image into low-dimensional feature representation
@@ -169,5 +170,5 @@ class Decoder(nn.Module):
         return x
 
 if __name__ == '__main__':
-    model = Decoder(3)
-    summary(model, [4,128,32, 32])
+    model = Encoder(True, True)
+    summary(model, [16,3,1024, 1024])
