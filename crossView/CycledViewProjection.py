@@ -10,10 +10,10 @@ from torchinfo import summary
 
 
 class CycledViewProjection(nn.Module):
-    def __init__(self, in_dim):
+    def __init__(self, img_h):
         super(CycledViewProjection, self).__init__()
-        self.transform_module = TransformModule(dim=in_dim)
-        self.retransform_module = TransformModule(dim=in_dim)
+        self.transform_module = TransformModule(dim=img_h)
+        self.retransform_module = TransformModule(dim=img_h)
         # self.bn = nn.BatchNorm2d(512)
 
     def forward(self, x):

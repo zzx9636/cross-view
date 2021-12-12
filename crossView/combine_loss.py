@@ -55,11 +55,11 @@ class combine_loss(nn.Module):
         weight.to(device)
         self.cross_entropy = nn.CrossEntropyLoss(weight=weight)
 
-    def forward(self, gt, outputs, features, retransform_features):
+    def forward(self, gt, output, features, retransform_features):
         losses = {}
         #print(gt.shape, outputs["topview"].shape)
         losses["topview_loss"] = self.compute_topview_loss(
-            outputs["topview"], gt)
+            output, gt)
         losses["transform_loss"] = self.compute_transform_losses(
             retransform_features,
             features
