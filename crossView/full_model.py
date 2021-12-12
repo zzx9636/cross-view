@@ -20,7 +20,7 @@ class PVA_model(nn.Module):
         self.criterion = combine_loss()
         #self.device = device
         # Initializing models
-        self.models["encoder"] = Encoder(True, True)
+        self.models["encoder"] = Encoder(True, False)
 
         self.models['CycledViewProjection'] = CycledViewProjection(in_dim=16)
         self.models["CrossViewTransformer"] = CrossViewTransformer(256)
