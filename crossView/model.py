@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.nn.utils import spectral_norm
 from torchinfo.torchinfo import forward_pass
 
-from EfficientNetEncoder import EfficientNetEncoder
+from .EfficientNetEncoder import EfficientNetEncoder
 from torchinfo import summary
 # Utils
 

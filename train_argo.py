@@ -40,7 +40,7 @@ class Trainer_argo:
             self.set_seed()  # set seed
 
         # Initializing models
-        self.model = PVA_model(self.opt, self.device)
+        self.model = PVA_model(self.opt)
         if torch.cuda.device_count() > 1:
             print("Use ", torch.cuda.device_count(), "GPUs!")
             self.model = torch.nn.DataParallel(self.model)
