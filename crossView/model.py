@@ -86,7 +86,7 @@ class Encoder(nn.Module):
         num_ch_enc = self.efficient_encoder.num_ch_enc
         # convolution to reduce depth and size of features before fc
         self.conv1 = Conv3x3(num_ch_enc[-1], 512)
-        self.conv2 = Conv3x3(512, 256)
+        #self.conv2 = Conv3x3(512, 256)
         self.pool = nn.MaxPool2d(2)
 
     def forward(self, x):
@@ -107,7 +107,7 @@ class Encoder(nn.Module):
 
         x = self.efficient_encoder(x)
         x = self.pool(self.conv1(x))
-        x = self.conv2(x)
+        #x = self.conv2(x)
         return x
 
 class UpSample(nn.Module):
@@ -148,7 +148,7 @@ class Decoder(nn.Module):
         self.num_output_channels = num_class
         
         
-        self.block0 = UpSample(256, 256, True) # 32
+        self.block0 = UpSample(512, 256, True) # 32
         self.block1 = UpSample(256, 128, True) # 64
         self.block2 = UpSample(128, 64, True) # 128
         self.block3 = UpSample(64, 32, True) # 256

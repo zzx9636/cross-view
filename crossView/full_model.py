@@ -23,7 +23,7 @@ class PVA_model(nn.Module):
         self.models["encoder"] = Encoder(True, False)
 
         self.models['CycledViewProjection'] = CycledViewProjection(in_dim=16)
-        self.models["CrossViewTransformer"] = CrossViewTransformer(256)
+        self.models["CrossViewTransformer"] = CrossViewTransformer(512)
 
         self.models["decoder"] = Decoder(3)
         

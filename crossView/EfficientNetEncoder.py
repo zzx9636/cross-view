@@ -7,9 +7,9 @@ class EfficientNetEncoder(nn.Module):
     def __init__(self, pretrained=True):
         super(EfficientNetEncoder, self).__init__()
 
-        self.raw_model = models.efficientnet_b7(pretrained=pretrained)
+        self.raw_model = models.efficientnet_b4(pretrained=pretrained)
         self.encoder = list(self.raw_model.children())[0]
-        self.num_ch_enc = [64, 32, 48, 80, 160, 224, 384, 640, 2560]
+        self.num_ch_enc = [1792]
 
     def forward(self, input_image):
         self.features = []
