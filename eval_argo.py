@@ -102,7 +102,7 @@ class eval_argo:
                 mAP += mean_precision(pred, true)
         iou /= len(self.val_loader)
         mAP /= len(self.val_loader)
-        print("Validation: mIOU Map: %.4f, mIOU Vehicle:%.4f; mAP Map: %.4f, mAP Map: %.4f" % (self.epoch, iou[1], iou[2], mAP[1], mAP[2]))
+        print("Validation: mIOU Map: %.4f, mIOU Vehicle:%.4f; mAP Map: %.4f, mAP Map: %.4f" % (iou[1], iou[2], mAP[1], mAP[2]))
     
     def generate_img(self, segm):
         h,w = segm.shape
@@ -128,7 +128,7 @@ class eval_argo:
         
         sub_path = filename.split('/')[:-2]
         file_name = filename.split('/')[-1]
-        full_path = os.path.join(self.opt.out_dir, *sub_path)
+        full_path = os.path.join(self.opt.out_dir, self.opt.model_name, *sub_path)
         
         if not os.path.exists(full_path):
             os.makedirs(full_path)
