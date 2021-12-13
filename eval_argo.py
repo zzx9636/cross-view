@@ -31,10 +31,8 @@ class eval_argo:
         self.create_time = time.strftime("%Y-%m-%d-%H-%M", time.localtime())
 
         # Initializing models
-        self.model = PVA_model(self.opt, self.device)
-
-        # Optimization
-        self.optimizer = optim.Adam(self.model.parameters_to_train)
+        self.model = PVA_model(self.opt)
+        self.model.to_device(self.device)
        
         # Data Loaders
         fpath = os.path.join(
@@ -129,7 +127,7 @@ class eval_argo:
         
         sub_path = filename.split('/')[:-2]
         file_name = filename.split('/')[-1]
-        full_path = os.path.join(self.opt.out_dir, *sub_path)
+        full_path = os.path.join(self.opt.out_dir, self.opt.model_name, *sub_path)
         
         if not os.path.exists(full_path):
             os.makedirs(full_path)
